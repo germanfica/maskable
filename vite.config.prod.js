@@ -48,6 +48,17 @@ export default defineConfig({
         }
       },
     },
+    {
+      name: "fix-css-relative-paths",
+      enforce: "post",
+      generateBundle(_, bundle) {
+        for (const f of Object.values(bundle)) {
+          if (f.type === "asset" && f.fileName.endsWith(".css")) {
+            f.source = f.source.replace(/css\/toggle\//g, "toggle/");
+          }
+        }
+      }
+    },
     handlebars({
       partialDirectory: resolve(__dirname, 'partials'),
       helpers: {
