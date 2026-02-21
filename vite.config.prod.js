@@ -9,7 +9,7 @@ import { ViteWebfontDownload as webfont } from 'vite-plugin-webfont-dl';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
-  base: '/',
+  base: '/', // fuerza rutas absolutas
   assetsInclude: ['**/*.svg'],
   build: {
     minify: true,
@@ -22,39 +22,18 @@ export default defineConfig({
     },
   },
   plugins: [
-    // plugin to fix relative paths in HTML
+    // fix absoluto para los iconos dentro de CSS
     {
-      name: 'fix-relative-paths-js',
+      name: 'fix-css-urls',
       enforce: 'post',
       generateBundle(_, bundle) {
-        for (const file of Object.values(bundle)) {
-          if (file.type === 'asset' || file.type === 'chunk') {
-            file.code = file.code?.replace(
-              /(["'`])(?!(?:https?:|\/))((?:toggle|favicon|demo)\/[^"'`]+)/g,
-              (m, q, p) => `${q}/${p}`
-            );
-          }
-        }
-      },
-    },
-    {
-      name: "fix-relative-paths-js-2",
-      enforce: "post",
-      generateBundle(_, bundle) {
-        for (const file of Object.values(bundle)) {
-          if (file.type === "chunk" && file.code) {
-            file.code = file.code.replace(/css\/toggle\//g, "toggle/");
-          }
-        }
-      },
-    },
-    {
-      name: "fix-css-relative-paths",
-      enforce: "post",
-      generateBundle(_, bundle) {
         for (const f of Object.values(bundle)) {
-          if (f.type === "asset" && f.fileName.endsWith(".css")) {
-            f.source = f.source.replace(/css\/toggle\//g, "toggle/");
+          if (f.type === 'asset' && f.fileName.endsWith('.css') && typeof f.source === 'string') {
+            f.source = f.source
+              // cualquier url('toggle/…') → url('/toggle/…')
+              .replace(/url\((['"]?)toggle\//g, "url($1/toggle/")
+              // por si quedaron en css/toggle
+              .replace(/url\((['"]?)css\/toggle\//g, "url($1/toggle/");
           }
         }
       }
